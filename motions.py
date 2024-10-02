@@ -18,7 +18,7 @@ from nav_msgs.msg import Odometry
 from rclpy.time import Time
 
 # You may add any other imports you may need/want to use below
-# import ...
+from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy, HistoryPolicy
 
 
 CIRCLE=0; SPIRAL=1; ACC_LINE=2
@@ -48,7 +48,11 @@ class motion_executioner(Node):
         self.laser_logger=Logger('laser_content_'+str(motion_types[motion_type])+'.csv', headers=["ranges", "angle_increment", "stamp"])
         
         # TODO Check if correct. Part 3: Create the QoS profile by setting the proper parameters in (...)
-        qos_sim = QoSProfile(reliability=1, durability=1, history=2, depth=10)
+        qos_sim = QoSProfile(depth=10)
+        qos_sim.reliability = ReliabilityPolicy.RELIABLE
+        qos_sim.durability = DurabilityPolicy.VOLATILE
+        qos_sim.history = HistoryPolicy.KEEP_LAST
+
         qos_bot = QoSProfile(reliability=2, durability=1, history=2, depth=10)
 
         # DONE Part 5: Create below the subscription to the topics corresponding to the respective sensors
@@ -77,6 +81,7 @@ class motion_executioner(Node):
                       Time.from_msg(imu_msg.header.stamp).nanoseconds]
 
         self.imu_logger.log_values(imu_fields)
+        self.imu_initialized = True
 
     def odom_callback(self, odom_msg: Odometry):
         # TODO: Check with TA if "th" means theta
@@ -93,6 +98,7 @@ class motion_executioner(Node):
                        ]
         
         self.odom_logger.log_values(odom_fields)
+        self.odom_initialized = True
                 
     def laser_callback(self, laser_msg: LaserScan):
         laser_fields = [laser_msg.ranges,
@@ -101,6 +107,7 @@ class motion_executioner(Node):
                         ]
 
         self.laser_logger.log_values(laser_fields)
+        self.laser_initialized = True
 
         
                 
@@ -153,30 +160,21 @@ class motion_executioner(Node):
 import argparse
 
 if __name__=="__main__":
-    
 
     argParser=argparse.ArgumentParser(description="input the motion type")
-
-
     argParser.add_argument("--motion", type=str, default="circle")
-
-
+    args = argParser.parse_args()
 
     rclpy.init()
 
-    args = argParser.parse_args()
-
     if args.motion.lower() == "circle":
-
         ME=motion_executioner(motion_type=CIRCLE)
     elif args.motion.lower() == "line":
         ME=motion_executioner(motion_type=ACC_LINE)
-
     elif args.motion.lower() =="spiral":
         ME=motion_executioner(motion_type=SPIRAL)
-
     else:
-        print(f"we don't have {arg.motion.lower()} motion type")
+        print(f"we don't have {args.motion.lower()} motion type")
 
 
     

@@ -27,17 +27,17 @@ def plot_imu_data(filename):
 def plot_laser_data(filename):
     ranges, angle_increment, timestamps = FileReader(filename).read_laser_file()
     
-    is_inf = np.isinf(ranges)
+    is_inf = np.isinf(ranges)[0]
     x = []
     y = []
-    for j, range_list in enumerate(ranges):
-        theta = 0
-        for i, dist in enumerate(range_list):
-            if not is_inf[j][i]:
-                x.append(dist * np.cos(theta))
-                y.append(dist * np.sin(theta))
-            theta += angle_increment
-    
+    range_list = ranges[0]
+    theta = 0
+    for i, dist in enumerate(range_list):
+        if not is_inf[i]:
+            x.append(dist * np.cos(theta))
+            y.append(dist * np.sin(theta))
+        theta += angle_increment
+
     plt.scatter(x, y)
     plt.xlabel('X')
     plt.ylabel('Y')

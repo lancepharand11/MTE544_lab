@@ -49,22 +49,20 @@ class motion_executioner(Node):
         self.laser_logger=Logger('laser_content_'+str(motion_types[motion_type])+'.csv', headers=["ranges", "angle_increment", "stamp"])
         
         # TODO Check if correct. Part 3: Create the QoS profile by setting the proper parameters in (...)
-        qos_sim = QoSProfile(depth=10)
-        qos_sim.reliability = ReliabilityPolicy.RELIABLE
-        qos_sim.durability = DurabilityPolicy.VOLATILE
-        qos_sim.history = HistoryPolicy.KEEP_LAST
-
-        qos_bot = QoSProfile(reliability=2, durability=1, history=2, depth=10)
+        QoS = QoSProfile(depth=10)
+        QoS.reliability = ReliabilityPolicy.RELIABLE
+        QoS.durability = DurabilityPolicy.VOLATILE
+        QoS.history = HistoryPolicy.KEEP_LAST
 
         # DONE Part 5: Create below the subscription to the topics corresponding to the respective sensors
         # IMU subscription
-        self.imu_sub = self.create_subscription(Imu, "imu", self.imu_callback, qos_sim)
+        self.imu_sub = self.create_subscription(Imu, "imu", self.imu_callback, QoS)
         
         # ENCODER subscription
-        self.encoder_sub = self.create_subscription(Odometry, "odom", self.odom_callback, qos_sim)
+        self.encoder_sub = self.create_subscription(Odometry, "odom", self.odom_callback, QoS)
         
         # LaserScan subscription 
-        self.laserscan_sub = self.create_subscription(LaserScan, "scan", self.laser_callback, qos_sim)
+        self.laserscan_sub = self.create_subscription(LaserScan, "scan", self.laser_callback, QoS)
         
         self.create_timer(0.1, self.timer_callback)
 

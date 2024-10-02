@@ -1,4 +1,5 @@
 from math import atan2, asin, sqrt
+import numpy as np
 
 M_PI=3.1415926535
 
@@ -19,22 +20,19 @@ class Logger:
 
 
     def log_values(self, values_list):
-
         with open(self.filename, 'a') as file:
-            vals_str=""
+            vals_str = ""
 
             for value in values_list:
-                if type(value) == list:
-                    vals_str += " ".join(str(x) for x in value)
+                if isinstance(value, (list, np.ndarray)):
+                    vals_str += "[" + "; ".join(str(x) for x in value) + "]"
                     vals_str += ", "
                 else:
                     vals_str += str(value)
                     vals_str += ", "
-            
-            vals_str+="\n"
-            
-            file.write(vals_str)
-            
+
+            vals_str += "\n"
+            file.write(vals_str)   
 
     def save_log(self):
         pass
@@ -82,6 +80,31 @@ class FileReader:
                 table.append(row)
         
         return headers, table
+
+    def read_laser_file(self):
+        ranges_list = []
+        angle_increment_list = []
+        stamp_list = []
+        
+        with open(self.filename, 'r') as file:
+            next(file)
+
+            for line in file:
+                values = line.strip().split(',')
+
+                ranges_list.append(np.fromstring(values[0].strip('[]'), sep='; '))
+                
+                angle_increment = float(values[1].strip())
+                angle_increment_list.append(angle_increment)
+                
+                stamp = float(values[2].strip())
+                stamp_list.append(stamp)
+        
+        ranges_np_array = np.array(ranges_list)
+        angle_increment_np_array = np.array(angle_increment_list)
+        stamp_np_array = np.array(stamp_list)
+        
+        return ranges_np_array, angle_increment_np_array[0], stamp_np_array
 
 
 # DONE Part 5: Implement the conversion from Quaternion to Euler Angles

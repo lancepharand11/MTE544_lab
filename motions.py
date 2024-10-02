@@ -19,6 +19,7 @@ from rclpy.time import Time
 
 # You may add any other imports you may need/want to use below
 from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy, HistoryPolicy
+import numpy as np
 
 
 CIRCLE=0; SPIRAL=1; ACC_LINE=2
@@ -101,7 +102,7 @@ class motion_executioner(Node):
         self.odom_initialized = True
                 
     def laser_callback(self, laser_msg: LaserScan):
-        laser_fields = [laser_msg.ranges,
+        laser_fields = [np.array(laser_msg.ranges),
                         laser_msg.angle_increment,
                         Time.from_msg(laser_msg.header.stamp).nanoseconds
                         ]

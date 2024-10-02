@@ -18,7 +18,7 @@ from nav_msgs.msg import Odometry
 from rclpy.time import Time
 
 # You may add any other imports you may need/want to use below
-# import ...
+from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSDurabilityPolicy, QoSHistoryPolicy
 
 
 CIRCLE=0; SPIRAL=1; ACC_LINE=2
@@ -48,7 +48,12 @@ class motion_executioner(Node):
         self.laser_logger=Logger('laser_content_'+str(motion_types[motion_type])+'.csv', headers=["ranges", "angle_increment", "stamp"])
         
         # TODO Check if correct. Part 3: Create the QoS profile by setting the proper parameters in (...)
-        qos_sim = QoSProfile(reliability=1, durability=1, history=2, depth=10)
+        qos_sim = QoSProfile(
+            reliability=QoSReliabilityPolicy.RELIABLE,
+            durability=QoSDurabilityPolicy.VOLATILE,
+            history=QoSHistoryPolicy.KEEP_LAST,
+            depth=10
+        )
         qos_bot = QoSProfile(reliability=2, durability=1, history=2, depth=10)
 
         # DONE Part 5: Create below the subscription to the topics corresponding to the respective sensors

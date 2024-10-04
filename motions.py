@@ -50,7 +50,7 @@ class motion_executioner(Node):
         
         # TODO Check if correct. Part 3: Create the QoS profile by setting the proper parameters in (...)
         QoS = QoSProfile(depth=10)
-        QoS.reliability = ReliabilityPolicy.RELIABLE
+        QoS.reliability = ReliabilityPolicy.BEST_EFFORT
         QoS.durability = DurabilityPolicy.VOLATILE
         QoS.history = HistoryPolicy.KEEP_LAST
 
@@ -142,21 +142,31 @@ class motion_executioner(Node):
         
         msg=Twist()
         # TODO: Check with TA on this. Are we supposed to create 2D circular trajectory in xy plane instead? 
-        msg.angular.z = 1.0
+        msg.angular.z = 3.0
+        msg.linear.x = 1.5
+
         return msg
 
     def make_spiral_twist(self):
         msg=Twist()
-        msg.linear.x = 1.0
-        msg.angular.z = 0.5
+        global x
+        x += 0.01
+        if x == 1:
+            x = 0
+        msg.linear.x = x
+        msg.angular.z = 2.0
         return msg
     
     def make_acc_line_twist(self):
         msg=Twist()
-        msg.linear.x = 1.0
+        global x
+        x += 0.01
+        msg.linear.x += x
         return msg
 
 import argparse
+
+x = 0
 
 if __name__=="__main__":
 
@@ -174,7 +184,6 @@ if __name__=="__main__":
         ME=motion_executioner(motion_type=SPIRAL)
     else:
         print(f"we don't have {args.motion.lower()} motion type")
-
 
     
     try:

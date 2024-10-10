@@ -46,7 +46,7 @@ def plot_laser_data(filename):
     plt.show()
 
 
-def plot_odom_data(filename):
+def plot_odom_data1(filename):
     headers, values = FileReader(filename).read_file()
     time_list = []
     first_stamp = values[0][-1]
@@ -59,7 +59,26 @@ def plot_odom_data(filename):
         plt.plot(time_list, [float(lin[i]) for lin in values], label=headers[i])
 
     plt.xlabel("Time (s)")
-    plt.ylabel("Odom Data")
+    plt.ylabel("Position (m); Theta Orientation (rad)")
+    plt.title(f"Odom Data from {filename}")
+    plt.legend()
+    plt.grid()
+    plt.show()
+
+
+def plot_odom_data2(filename):
+    headers, values = FileReader(filename).read_file()
+    time_list = []
+    first_stamp = values[0][-1]
+
+    # for val in values:
+    #     time_list.append((val[-1] - first_stamp) * 1e-9)  # Convert to seconds
+
+    plt.figure()
+    plt.plot([float(lin[0]) for lin in values], [float(lin[1]) for lin in values], label="x vs y")
+
+    plt.xlabel("X (m)")
+    plt.ylabel("Y (m)")
     plt.title(f"Odom Data from {filename}")
     plt.legend()
     plt.grid()
@@ -72,7 +91,8 @@ def plot_file(filename):
     elif 'laser_content' in filename:
         plot_laser_data(filename)
     elif 'odom_content' in filename:
-        plot_odom_data(filename)
+        plot_odom_data1(filename)
+        plot_odom_data2(filename)
     else:
         print(f"Unknown file type for {filename}")
 

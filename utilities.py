@@ -83,39 +83,68 @@ class FileReader:
     
     
 
-# TODO Part 3: Implement the conversion from Quaternion to Euler Angles
+# DONE Part 3: Implement the conversion from Quaternion to Euler Angles
 def euler_from_quaternion(quat):
     """
     Convert quaternion (w in last place) to euler roll, pitch, yaw.
     quat = [x, y, z, w]
     """
+    x = quat[0]
+    y = quat[1]
+    z = quat[2]
+    w = quat[3]
 
-    # just unpack yaw
+    # Roll (x-axis rotation)
+    sinr_cosp = 2 * (w * x + y * z)
+    cosr_cosp = 1 - 2 * (x**2 + y**2)
+    roll = atan2(sinr_cosp, cosr_cosp)
+
+    # Pitch (y-axis rotation)
+    sinp = sqrt(1 + 2 * (w * y - x * z))
+    cosp = sqrt(1 - 2 * (w * y - x * z))
+    pitch = 2 * atan2(sinp, cosp) - M_PI / 2
+
+    # Yaw (z-axis rotation)
+    siny_cosp = 2 * (w * z + x * y)
+    cosy_cosp = 1 - 2 * (y**2 + z**2)
+    yaw = atan2(siny_cosp, cosy_cosp)
+
     return yaw
 
 
-#TODO Part 4: Implement the calculation of the linear error
+#DONE Part 4: Implement the calculation of the linear error
 def calculate_linear_error(current_pose, goal_pose):
-        
     # Compute the linear error in x and y
     # Remember that current_pose = [x,y, theta, time stamp] and goal_pose = [x,y]
     # Remember to use the Euclidean distance to calculate the error.
-    error_linear= ...
-
+    goal_x = goal_pose[0]
+    goal_y = goal_pose[1]
+    current_x = current_pose[0]
+    current_y = current_pose[1]
+    error_linear = sqrt((goal_y - current_y) ** 2 + (goal_x - current_x) ** 2)
     return error_linear
 
-#TODO Part 4: Implement the calculation of the angular error
-def calculate_angular_error(current_pose, goal_pose):
 
+#DONE Part 4: Implement the calculation of the angular error
+def calculate_angular_error(current_pose, goal_pose):
     # Compute the linear error in x and y
     # Remember that current_pose = [x,y, theta, time stamp] and goal_pose = [x,y]
     # Use atan2 to find the desired orientation
     # Remember that this function returns the difference in orientation between where the robot currently faces and where it should face to reach the goal
+    goal_x = goal_pose[0]
+    goal_y = goal_pose[1]
+    current_x = current_pose[0]
+    current_y = current_pose[1]
+    theta = current_pose[2]
 
-    error_angular = ...
+    # Map theta between -pi and pi
+    theta = theta % (2 * M_PI); 
+    theta = (theta + (2 * M_PI)) % (2 * M_PI)  
+    if (theta > M_PI):
+        theta -= (2 * M_PI); 
 
-    # Remember to handle the cases where the angular error might exceed the range [-π, π]
+    # theta = (theta + M_PI) % (2 * M_PI) - M_PI 
+    angle_to_goal = atan2(goal_y - current_y, goal_x - current_x)
+    error_angular = angle_to_goal - theta
 
-    ...
-    
     return error_angular

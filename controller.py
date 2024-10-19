@@ -9,8 +9,6 @@ M_PI=3.1415926535
 P=0; PD=1; PI=2; PID=3
 
 class controller:
-    
-    
     # Default gains of the controller for linear and angular motions
     def __init__(self, klp=0.2, klv=0.2, kli=0.2, kap=0.2, kav=0.2, kai=0.2):
         
@@ -20,18 +18,18 @@ class controller:
 
     
     def vel_request(self, pose, goal, status):
-        
         e_lin=calculate_linear_error(pose, goal)
         e_ang=calculate_angular_error(pose, goal)
-
 
         linear_vel=self.PID_linear.update([e_lin, pose[3]], status)
         angular_vel=self.PID_angular.update([e_ang, pose[3]], status)
         
-        # TODO Part 4: Add saturation limits for the robot linear and angular velocity
-
-        linear_vel = ... if linear_vel > 1.0 else linear_vel
-        angular_vel= ... if angular_vel > 1.0 else angular_vel
+        # DONE Part 4: Add saturation limits for the robot linear and angular velocity
+        # Used limits for the real robot 
+        if linear_vel > 0.31: # m/s
+            linear_vel = 0.31
+        if angular_vel > 1.90: # rad/s
+            angular_vel = 1.90
         
         return linear_vel, angular_vel
     

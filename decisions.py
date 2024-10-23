@@ -19,7 +19,7 @@ from planner import TRAJECTORY_PLANNER, POINT_PLANNER, planner
 from controller import controller, trajectoryController
 
 # You may add any other imports you may need/want to use below
-# import ...
+from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy, HistoryPolicy
 
 
 class decision_maker(Node):
@@ -57,24 +57,22 @@ class decision_maker(Node):
 
 
     def timerCallback(self):
-        
         # DONE Part 3: Run the localization node
         spin_once(self.localizer)
 
-        if self.localizer.getPose()  is  None:
+        if self.localizer.getPose() is None:
             print("waiting for odom msgs ....")
             return
 
-        vel_msg=Twist()
+        vel_msg = Twist()
         reached_goal = False
 
         # DONE Part 3: Check if you reached the goal
-        ang_error_tol = 0.1 # rad
-        lin_error_tol = 0.05 # m
+        ang_error_tol = 0.1  # rad
+        lin_error_tol = 0.05  # m
         if type(self.goal) == list:
-            if (calculate_angular_error(self.localizer.getPose(), self.goal) < ang_error_tol & 
+            if (calculate_angular_error(self.localizer.getPose(), self.goal) < ang_error_tol and 
                 calculate_linear_error(self.localizer.getPose(), self.goal) < lin_error_tol):
-
                 reached_goal = True
         
         if reached_goal:
@@ -89,10 +87,11 @@ class decision_maker(Node):
 
         velocity, yaw_rate = self.controller.vel_request(self.localizer.getPose(), self.goal, True)
 
-        #DONE Part 4: Publish the velocity to move the robot
-        vel_msg.linear = velocity
-        vel_msg.angular = yaw_rate
+        # DONE Part 4: Publish the velocity to move the robot
+        vel_msg.linear.x = velocity
+        vel_msg.angular.z = yaw_rate
         self.publisher.publish(vel_msg)
+
 
 
 import argparse
@@ -102,19 +101,21 @@ def main(args=None):
     
     init()
 
-    # TODO Part 3: You migh need to change the QoS profile based on whether you're using the real robot or in simulation.
+    # DONE Part 3: You migh need to change the QoS profile based on whether you're using the real robot or in simulation.
     # Remember to define your QoS profile based on the information available in "ros2 topic info /odom --verbose" as explained in Tutorial 3
-    
-    odom_qos=QoSProfile(reliability=2, durability=2, history=1, depth=10)
+    QoS = QoSProfile(depth=10)
+    QoS.reliability = ReliabilityPolicy.BEST_EFFORT
+    QoS.durability = DurabilityPolicy.VOLATILE
+    QoS.history = HistoryPolicy.KEEP_LAST
     
 
     # TODO Part 4: instantiate the decision_maker with the proper parameters for moving the robot
     if args.motion.lower() == "point":
-        DM=decision_maker(...)
+        DM = decision_maker(Twist, 'cmd_vel', QoS, motion_type=POINT_PLANNER)
     elif args.motion.lower() == "trajectory":
-        DM=decision_maker(...)
+        DM = decision_maker(Twist, 'cmd_vel', QoS, motion_type=TRAJECTORY_PLANNER)
     else:
-        print("invalid motion type", file=sys.stderr)        
+        print("invalid motion type", file=sys.stderr)      
     
     
     

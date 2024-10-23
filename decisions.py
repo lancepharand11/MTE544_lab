@@ -109,7 +109,7 @@ def main(args=None):
     QoS.history = HistoryPolicy.KEEP_LAST
     
 
-    # TODO Part 4: instantiate the decision_maker with the proper parameters for moving the robot
+    # DONE Part 4: instantiate the decision_maker with the proper parameters for moving the robot
     if args.motion.lower() == "point":
         DM = decision_maker(Twist, 'cmd_vel', QoS, motion_type=POINT_PLANNER)
     elif args.motion.lower() == "trajectory":

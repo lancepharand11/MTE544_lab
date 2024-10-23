@@ -124,6 +124,12 @@ def calculate_linear_error(current_pose, goal_pose):
     error_linear = sqrt((goal_y - current_y) ** 2 + (goal_x - current_x) ** 2)
     return error_linear
 
+def normalize_angle(angle):
+    angle = angle % (2 * M_PI)
+    if angle > M_PI:
+        angle -= 2 * M_PI
+    return angle
+
 
 #DONE Part 4: Implement the calculation of the angular error
 def calculate_angular_error(current_pose, goal_pose):
@@ -138,13 +144,11 @@ def calculate_angular_error(current_pose, goal_pose):
     theta = current_pose[2]
 
     # Map theta between -pi and pi
-    theta = theta % (2 * M_PI); 
-    theta = (theta + (2 * M_PI)) % (2 * M_PI)  
-    if (theta > M_PI):
-        theta -= (2 * M_PI); 
+    theta = normalize_angle(theta) 
 
     # theta = (theta + M_PI) % (2 * M_PI) - M_PI 
     angle_to_goal = atan2(goal_y - current_y, goal_x - current_x)
     error_angular = angle_to_goal - theta
+    error_angular = normalize_angle(error_angular)
 
     return error_angular

@@ -8,6 +8,7 @@ from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy, HistoryPo
 from nav_msgs.msg import Odometry as odom
 
 from rclpy import init, spin
+import rclpy
 
 rawSensor = 0
 class localization(Node):
@@ -61,6 +62,7 @@ def main(args=None):
     init(args=args)
     node = localization()
     spin(node)
+    rclpy.shutdown()
 
 
 if __name__ == "__main__":

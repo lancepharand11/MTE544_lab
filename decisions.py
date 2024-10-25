@@ -37,10 +37,10 @@ class decision_maker(Node):
         # TODO Part 5: Tune your parameters here
     
         if motion_type == POINT_PLANNER:
-            self.controller=controller(klp=0.2, klv=0.5, kap=0.8, kav=0.6)
+            self.controller=controller(klp=0.8, klv=0.5, kli=0.5, kap=0.8, kai=0.5, kav=0.5)
             self.planner=planner(POINT_PLANNER)
         elif motion_type==TRAJECTORY_PLANNER:
-            self.controller=trajectoryController(klp=0.2, klv=0.5, kap=0.8, kav=0.6)
+            self.controller=trajectoryController(klp=0.8, klv=0.5, kli=0.5, kap=0.8, kai=0.5, kav=0.5)
             self.planner=planner(TRAJECTORY_PLANNER)
         else:
             print("Error! you don't have this planner", file=sys.stderr)
@@ -68,12 +68,16 @@ class decision_maker(Node):
         reached_goal = False
 
         # DONE Part 3: Check if you reached the goal
-        ang_error_tol = 0.1  # rad
-        lin_error_tol = 0.05  # m
+        ang_error_tol = 0.5  # rad
+        lin_error_tol = 0.01  # m
         if type(self.goal) == list:
-            if (calculate_angular_error(self.localizer.getPose(), self.goal) < ang_error_tol and 
-                calculate_linear_error(self.localizer.getPose(), self.goal) < lin_error_tol):
+            if (calculate_angular_error(self.localizer.getPose(), self.goal[-1]) < ang_error_tol and 
+                calculate_linear_error(self.localizer.getPose(), self.goal[-1]) < lin_error_tol):
                 reached_goal = True
+        else:
+            if (calculate_angular_error(self.localizer.getPose(), self.goal) < ang_error_tol and 
+                    calculate_linear_error(self.localizer.getPose(), self.goal) < lin_error_tol):
+                    reached_goal = True
         
         if reached_goal:
             print("reached goal")
@@ -98,7 +102,6 @@ import argparse
 
 
 def main(args=None):
-    
     init()
 
     # DONE Part 3: You migh need to change the QoS profile based on whether you're using the real robot or in simulation.

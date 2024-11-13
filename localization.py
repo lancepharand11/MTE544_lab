@@ -47,19 +47,19 @@ class localization(Node):
         
         # TODO Part 3: Set up the quantities for the EKF (hint: you will need the functions for the states and measurements)
         
-        x= ...
+        x= np.array([[0], [0], [0], [0], [0], [0]])
+        #value of Q given in part 4, multiplied by identity matrix
+        Q= np.array([[0.5, 0, 0, 0, 0, 0], [0, 0.5, 0, 0, 0, 0], [0, 0, 0.5, 0, 0, 0], [0, 0, 0, 0.5, 0, 0], [0, 0, 0, 0, 0.5, 0], [0, 0, 0, 0, 0, 0.5]])
+        #value of R given in part 4, multiplied by identity matrix
+        R= np.array([[0.5, 0, 0, 0], [0, 0.5, 0, 0], [0, 0, 0.5, 0], [0, 0, 0, 0.5]])
         
-        Q= ...
-
-        R= ...
-        
-        P= ... # initial covariance
+        P=Q #TA said you could initialize to Q
         
         self.kf=kalman_filter(P,Q,R, x, dt)
         
         # TODO Part 3: Use the odometry and IMU data for the EKF
-        self.odom_sub=message_filters.Subscriber(...)
-        self.imu_sub=message_filters.Subscriber(...)
+        self.odom_sub=message_filters.Subscriber(self, odom, "/odom", qos_profile=odom_qos)
+        self.imu_sub=message_filters.Subscriber(self, Imu, "/imu", qos_profile=odom_qos)
         
         time_syncher=message_filters.ApproximateTimeSynchronizer([self.odom_sub, self.imu_sub], queue_size=10, slop=0.1)
         time_syncher.registerCallback(self.fusion_callback)
@@ -71,7 +71,12 @@ class localization(Node):
         # your measurements are the linear velocity and angular velocity from odom msg
         # and linear acceleration in x and y from the imu msg
         # the kalman filter should do a proper integration to provide x,y and filter ax,ay
-        z=...
+        linear_velocity = odom_msg.twist.twist.linear.x
+        angular_velocity = odom_msg.twist.twist.angular.z
+        acceleration_x = imu_msg.linear_acceleration.x
+        acceleration_y = imu_msg.linear_acceleration.y
+        
+        z=np.array([[linear_velocity], [angular_velocity], [acceleration_x], [acceleration_y]])
         
         # Implement the two steps for estimation
         ...

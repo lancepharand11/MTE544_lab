@@ -1,26 +1,21 @@
-
-
 import numpy as np
-
 
 
 # TODO Part 3: Comment the code explaining each part
 class kalman_filter:
-    
-    # TODO Part 3: Initialize the covariances and the states    
+    # DONE Part 3: Initialize the covariances and the states    
     def __init__(self, P,Q,R, x, dt):
         
-        self.P=...
-        self.Q=...
-        self.R=...
-        self.x=...
-        self.dt = ...
+        self.P = P
+        self.Q = Q
+        self.R = R
+        self.x = x
+        self.dt = dt
         
-    # TODO Part 3: Replace the matrices with Jacobians where needed        
+    # DONE Part 3: Replace the matrices with Jacobians where needed        
     def predict(self):
-
-        self.A = ...
-        self.C = ...
+        self.A = self.jacobian_A() # Obtain current A matrix through linearization of motion model
+        self.C = self.jacobian_H() # Obtain current C matrix through linearization of observation model
         
         self.motion_model()
         
@@ -38,61 +33,59 @@ class kalman_filter:
         self.x=self.x + np.dot(kalman_gain, surprise_error)
         self.P=np.dot( (np.eye(self.A.shape[0]) - np.dot(kalman_gain, self.C)) , self.P)
         
-    
-    # TODO Part 3: Implement here the measurement model
+    # TODO: Check if correct (I think it's correct since it matched with the jacobian H template). 
+    # Part 3: Implement here the measurement model
     def measurement_model(self):
         x, y, th, w, v, vdot = self.x
         return np.array([
-            ...,# v
-            ...,# w
-            ..., # ax
-            ..., # ay
+            v,# v
+            w,# w
+            vdot, # ax. NOTE: Assumed vdot is always aligned with x axis
+            v * w, # ay. NOTE: Used centripetal accel for ay
         ])
         
-    # TODO Part 3: Impelment the motion model (state-transition matrice)
+    # DONE Part 3: Impelment the motion model (state-transition matrice)
     def motion_model(self):
         
         x, y, th, w, v, vdot = self.x
         dt = self.dt
         
         self.x = np.array([
-            x + ... * np.cos(th) * dt,
-            y + ... * np.sin(th) * dt,
+            x + v * np.cos(th) * dt,
+            y + v * np.sin(th) * dt,
             th + w * dt,
             w,
             v  + vdot*dt,
             vdot,
         ])
         
-
-
-    
+    # DONE
     def jacobian_A(self):
         x, y, th, w, v, vdot = self.x
         dt = self.dt
         
         return np.array([
-            #x, y,               th, w,             v, vdot
-            [1, 0,              ..., 0,          ...,  0],
-            [0, 1,              ..., 0,          ...,  0],
-            [0, 0,                1, dt,           0,  0],
-            [0, 0,                0, 1,            0,  0],
-            [0, 0,                0, 0,            1,  dt],
-            [0, 0,                0, 0,            0,  1 ]
+            #x, y, th, w, v, vdot
+            [1, 0, -v * np.sin(th) * dt, 0, np.cos(th) * dt, 0], # partial deriv of x w.r.t state variables
+            [0, 1, v * np.cos(th) * dt, 0, np.sin(th) * dt,  0], # partial deriv of y w.r.t state variables
+            [0, 0, 1, dt, 0, 0], # partial deriv of theta w.r.t state variables
+            [0, 0, 0, 1, 0, 0], # partial deriv of omega w.r.t state variables
+            [0, 0, 0, 0, 1, dt], # partial deriv of v w.r.t state variables
+            [0, 0, 0, 0, 0, 1] # partial deriv of vdot w.r.t state variables
         ])
     
-    
-    # TODO Part 3: Implement here the jacobian of the H matrix (measurements)    
+    # DONE Part 3: Implement here the jacobian of the H matrix (measurements)  
+    # TODO: If measurement_model is incorrect, update this method   
     def jacobian_H(self):
-        x, y, th, w, v, vdot=self.x
+        x, y, th, w, v, vdot = self.x
         return np.array([
-            #x, y,th, w, v,vdot
-            [0,0,0  , 0, 1, 0], # v
-            [0,0,0  , 1, 0, 0], # w
-            [0,0,0  , 0, 0, 1], # ax
-            [0,0,0  , ..., ..., 0], # ay
+            #x, y, th, w, v, vdot
+            [0, 0, 0, 0, 1, 0], # partial deriv of v w.r.t state variables
+            [0, 0, 0, 1, 0, 0], # partial deriv of w w.r.t state variables
+            [0, 0, 0, 0, 0, 1], # partial deriv of ax w.r.t state variables
+            [0, 0, 0, v, w, 0], # partial deriv of ay w.r.t state variables
         ])
         
-    # TODO Part 3: return the states here    
+    # DONE Part 3: return the states here    
     def get_states(self):
-        return ...
+        return self.x

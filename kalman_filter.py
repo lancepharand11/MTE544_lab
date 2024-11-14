@@ -1,7 +1,7 @@
 import numpy as np
 
 
-# TODO Part 3: Comment the code explaining each part
+# DONE Part 3: Comment the code explaining each part
 class kalman_filter:
     # DONE Part 3: Initialize the covariances and the states    
     def __init__(self, P,Q,R, x, dt):
@@ -21,7 +21,7 @@ class kalman_filter:
         
         self.P= np.dot( np.dot(self.A, self.P), self.A.T) + self.Q
 
-    # TODO Part 3: Replace the matrices with Jacobians where needed
+    # DONE Part 3: Replace the matrices with Jacobians where needed
     def update(self, z):
 
         S=np.dot(np.dot(self.C, self.P), self.C.T) + self.R
@@ -33,8 +33,7 @@ class kalman_filter:
         self.x=self.x + np.dot(kalman_gain, surprise_error)
         self.P=np.dot( (np.eye(self.A.shape[0]) - np.dot(kalman_gain, self.C)) , self.P)
         
-    # TODO: Check if correct (I think it's correct since it matched with the jacobian H template). 
-    # Part 3: Implement here the measurement model
+    # DONE: Part 3: Implement here the measurement model
     def measurement_model(self):
         x, y, th, w, v, vdot = self.x
         return np.array([
@@ -75,7 +74,6 @@ class kalman_filter:
         ])
     
     # DONE Part 3: Implement here the jacobian of the H matrix (measurements)  
-    # TODO: If measurement_model is incorrect, update this method   
     def jacobian_H(self):
         x, y, th, w, v, vdot = self.x
         return np.array([

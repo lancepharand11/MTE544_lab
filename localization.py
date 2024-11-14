@@ -19,9 +19,23 @@ from rclpy import init, spin, spin_once
 import numpy as np
 import message_filters
 
+from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy, HistoryPolicy
+
 rawSensors=0
 kalmanFilter=1
-odom_qos=QoSProfile(reliability=2, durability=2, history=1, depth=10)
+odom_qos=QoSProfile(
+    reliability=ReliabilityPolicy.BEST_EFFORT, 
+    durability=DurabilityPolicy.VOLATILE, 
+    history=HistoryPolicy.KEEP_LAST, 
+    depth=10)
+
+# For indexing X
+X=0
+Y=1
+TH=2
+W=3
+V=4
+VDOT=5
 
 class localization(Node):
     
@@ -29,7 +43,7 @@ class localization(Node):
 
         super().__init__("localizer")
 
-        elf.loc_logger=Logger( loggerName , loggerHeaders)
+        self.loc_logger=Logger( loggerName , loggerHeaders)
         self.pose=None
         
         if type==rawSensors:
@@ -45,19 +59,41 @@ class localization(Node):
         
     def initKalmanfilter(self, dt):
         
-        # TODO Part 3: Set up the quantities for the EKF (hint: you will need the functions for the states and measurements)
+        # DONE Part 3: Set up the quantities for the EKF (hint: you will need the functions for the states and measurements)
         
-        x= np.array([[0], [0], [0], [0], [0], [0]])
+        # n x 1 = 6 x 1
+        x= np.array([
+            [0],    # x
+            [0],    # y
+            [0],    # th
+            [0],    # w
+            [0],    # v
+            [0]     # vdot (a)
+        ])
         #value of Q given in part 4, multiplied by identity matrix
-        Q= np.array([[0.5, 0, 0, 0, 0, 0], [0, 0.5, 0, 0, 0, 0], [0, 0, 0.5, 0, 0, 0], [0, 0, 0, 0.5, 0, 0], [0, 0, 0, 0, 0.5, 0], [0, 0, 0, 0, 0, 0.5]])
+        # n x n = 6 x 6
+        Q= np.array([
+            [0.5, 0, 0, 0, 0, 0], 
+            [0, 0.5, 0, 0, 0, 0], 
+            [0, 0, 0.5, 0, 0, 0], 
+            [0, 0, 0, 0.5, 0, 0], 
+            [0, 0, 0, 0, 0.5, 0], 
+            [0, 0, 0, 0, 0, 0.5]
+        ])
         #value of R given in part 4, multiplied by identity matrix
-        R= np.array([[0.5, 0, 0, 0], [0, 0.5, 0, 0], [0, 0, 0.5, 0], [0, 0, 0, 0.5]])
+        # m x m = 4 x 4
+        R= np.array([
+            [0.5, 0, 0, 0],
+            [0, 0.5, 0, 0],
+            [0, 0, 0.5, 0],
+            [0, 0, 0, 0.5]
+        ])
         
         P=Q #TA said you could initialize to Q
         
         self.kf=kalman_filter(P,Q,R, x, dt)
         
-        # TODO Part 3: Use the odometry and IMU data for the EKF
+        # DONE Part 3: Use the odometry and IMU data for the EKF
         self.odom_sub=message_filters.Subscriber(self, odom, "/odom", qos_profile=odom_qos)
         self.imu_sub=message_filters.Subscriber(self, Imu, "/imu", qos_profile=odom_qos)
         
@@ -66,7 +102,7 @@ class localization(Node):
     
     def fusion_callback(self, odom_msg: odom, imu_msg: Imu):
         
-        # TODO Part 3: Use the EKF to perform state estimation
+        # DONE Part 3: Use the EKF to perform state estimation
         # Take the measurements
         # your measurements are the linear velocity and angular velocity from odom msg
         # and linear acceleration in x and y from the imu msg
@@ -76,19 +112,42 @@ class localization(Node):
         acceleration_x = imu_msg.linear_acceleration.x
         acceleration_y = imu_msg.linear_acceleration.y
         
-        z=np.array([[linear_velocity], [angular_velocity], [acceleration_x], [acceleration_y]])
+        # m x 1 = 4 x 1
+        z=np.array([
+            [linear_velocity],
+            [angular_velocity],
+            [acceleration_x],
+            [acceleration_y]
+        ])
         
         # Implement the two steps for estimation
-        ...
+        self.kf.predict()
+        self.kf.update(z)
         
         # Get the estimate
-        xhat=self.kf.get_states()
+        x_hat=self.kf.get_states()
 
         # Update the pose estimate to be returned by getPose
-        self.pose=np.array(...)
+        self.pose = np.array([
+            x_hat[0], 
+            x_hat[1],
+            x_hat[2],
+            imu_msg.header.stamp
+        ])
 
-        # TODO Part 4: log your data
-        self.loc_logger.log_values(...)
+        # DONE Part 4: log your data
+        # ["imu_ax", "imu_ay", "kf_ax", "kf_ay","kf_vx","kf_w","kf_x", "kf_y","stamp"]
+        self.loc_logger.log_values([
+            imu_msg.linear_acceleration.x,  # imu_ax
+            imu_msg.linear_acceleration.y,  # imu_ay
+            x_hat[VDOT],                    # kf_ax
+            x_hat[V] * x_hat[W],            # kf_ay
+            x_hat[V],                       # kf_vx
+            x_hat[W],                       # kf_w
+            x_hat[X],                       # kf_x
+            x_hat[Y],                       # kf_y
+            imu_msg.header.stamp.to_sec()   # timestamp
+        ])
       
     def odom_callback(self, pose_msg):
         

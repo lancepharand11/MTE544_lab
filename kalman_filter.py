@@ -25,6 +25,7 @@ class kalman_filter:
     def update(self, z):
 
         S=np.dot(np.dot(self.C, self.P), self.C.T) + self.R
+        S = np.array(S, dtype=np.float64)
             
         kalman_gain=np.dot(np.dot(self.P, self.C.T), np.linalg.inv(S))
         

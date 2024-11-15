@@ -146,7 +146,8 @@ class localization(Node):
             x_hat[W],                       # kf_w
             x_hat[X],                       # kf_x
             x_hat[Y],                       # kf_y
-            imu_msg.header.stamp.to_sec()   # timestamp
+            imu_msg.header.stamp.sec + imu_msg.header.stamp.nanosec*(1e-9) 
+            #imu_msg.header.stamp.to_sec()   # timestamp
         ])
       
     def odom_callback(self, pose_msg):

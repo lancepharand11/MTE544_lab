@@ -29,9 +29,9 @@ class Node:
 
 def return_path(current_node, maze):
     path = []
-    no_rows, no_columns = np.shape(maze)
+    num_rows, num_columns = np.shape(maze)
     # here we create the initialized result maze with -1 in every position
-    result = [[-1 for i in range(no_columns)] for j in range(no_rows)]
+    result = [[-1 for i in range(num_columns)] for j in range(num_rows)]
     current = current_node
     while current is not None:
         path.append(current.position)
@@ -45,6 +45,14 @@ def return_path(current_node, maze):
         start_value += 1
 
     return path
+
+def compute_heuristic(node, end, euclidean_dist=True):
+    if euclidean_dist:
+        return sqrt((node.position[0] - end.position[0]) ** 2 +
+                        (node.position[1] - end.position[1]) ** 2)
+    else: # manhattan dist
+        return np.abs(node.position[0] - end.position[0]) + \
+                    np.abs(node.position[1] - end.position[1])
 
 
 def search(maze, start, end, euclidean_dist=True):
@@ -65,15 +73,15 @@ def search(maze, start, end, euclidean_dist=True):
 
     # DONE PART 4 Create start and end node with initized values for g, h and f
     # Use None as parent if not defined
-    start_node = Node(position=tuple(start))
+    start_node = Node(position=start) # start and end are already tuples of (x, y)
     start_node.g = 0.0    # cost from start Node
-    start_node.h = 0.0     # heuristic estimated cost to end Node
-    start_node.f = 0.0
+    start_node.h = compute_heuristic(start_node, end_node, euclidean_dist=euclidean_dist)
+    start_node.f = start_node.g + start_node.h
 
-    end_node = Node(position=tuple(end))
+    end_node = Node(position=end)
     end_node.g = np.inf       # set a large value if not defined
-    end_node.h = np.inf       # heuristic estimated cost to end Node
-    end_node.f = np.inf
+    end_node.h = compute_heuristic(end_node, end_node, euclidean_dist=euclidean_dist)
+    end_node.f = end_node.g + end_node.h
 
     # Initialize both yet_to_visit and visited dictionary
     # in this dict we will put all node that are yet_to_visit for exploration.
@@ -102,21 +110,21 @@ def search(maze, start, end, euclidean_dist=True):
     #         [...],  # go up right
     #         [...]]  # go down right
 
-    # 4 moves
-    move = [[-1, 0],  # go up
-            [0, -1],  # go left
-            [1, 0],   # go down
-            [0, 1]]   # go right
+    # 4 moves -- Assuming it would be [x, y] for 2D maze
+    move = [[0, -1],   # Up
+            [-1, 0],   # Left
+            [0, 1],    # Down
+            [1, 0]]    # Right
     
-    # # 8 moves
-    # move = [[-1, 0],   # go up
-    #         [0, -1],   # go left
-    #         [1, 0],    # go down
-    #         [0, 1],    # go right
-    #         [-1, -1],  # go up-left
-    #         [-1, 1],   # go up-right
-    #         [1, -1],   # go down-left
-    #         [1, 1]]    # go down-right
+    # # 8 moves --  update comments
+    # move = [[0, -1],   # Up
+    #         [-1, 0],   # Left
+    #         [0, 1],    # Down
+    #         [1, 0],    # Right
+    #         [-1, -1],  # Up-Left
+    #         [-1, 1],   # Down-Left
+    #         [1, -1],   # Up-Right
+    #         [1, 1]]    # Down-Right
 
     """
         1) We first get the current node by comparing all f cost and selecting the lowest cost node for further expansion
@@ -136,7 +144,7 @@ def search(maze, start, end, euclidean_dist=True):
                 d) else move the child to yet_to_visit dict
     """
     # DONE PART 4 find maze has got how many rows and columns
-    no_rows, no_columns = np.shape(maze)
+    num_rows, num_columns = np.shape(maze)
 
     # Loop until you find the end
 
@@ -175,19 +183,17 @@ def search(maze, start, end, euclidean_dist=True):
             node_position = (current_node.position[0] + new_position[0], current_node.position[1] + new_position[1])
 
             # DONE PART 4 Make sure within range (check if within maze boundary)
-            # TODO: Check if it should include boundaries too 
-            if node_position[0] < 0 or node_position[0] >= no_rows or \
-                node_position[1] < 0 or node_position[1] >= no_columns:
+            # Check if within range (maze boundaries)
+            if (node_position[0] > (num_rows - 1) or node_position[0] < 0 or
+                    node_position[1] > (num_columns - 1) or node_position[1] < 0):
                 continue
 
             # Make sure walkable terrain
-            if maze[node_position[0], node_position[1]] > 0.8:
+            if maze[node_position[0]][node_position[1]] > 0.8:
                 continue
 
             # Create new node
-            new_node = Node(current_node, node_position)
-
-            # Append
+            new_node = Node(parent=current_node, position=node_position)
             children.append(new_node)
 
         # Loop through children
@@ -197,25 +203,23 @@ def search(maze, start, end, euclidean_dist=True):
                 continue
 
             # DONE PART 4 Create the f, g, and h values
-            # TODO: Not too sure about this line
-            child.g = current_node.g + 1
+            # Diagonal movements have higher cost (sqrt(2))
+            if abs(child.position[0] - current_node.position[0]) == 1 and \
+               abs(child.position[1] - current_node.position[1]) == 1:
+                movement_cost = sqrt(2)
+            else:
+                movement_cost = 1
 
             # Heuristic costs calculated here, this is uses eucledian dist or manhattan dist
-            # NOTE: No scaling parameter used for h
-            if euclidean_dist:
-                child.h = sqrt((child.position[0] - end_node.position[0]) ** 2 +
-                               (child.position[1] - end_node.position[1]) ** 2)
-            else: # manhattan dist
-                child.h = np.abs(child.position[0] - end_node.position[0]) + \
-                            np.abs(child.position[1] - end_node.position[1])
-
+            child.g = current_node.g + movement_cost
+            child.h = compute_heuristic(child, end_node, euclidean_dist=euclidean_dist)
             child.f = child.g + child.h
 
             # Child is already in the yet_to_visit list and g cost is already lower
-            child_node_in_yet_to_visit = yet_to_visit_dict.get(
-                child.position, False)
-            if (child_node_in_yet_to_visit is not False) and (child.g >= child_node_in_yet_to_visit.g):
+            existing_node = yet_to_visit_dict.get(child.position)
+            if existing_node and child.g >= existing_node.g:
                 continue
 
             # Add the child to the yet_to_visit list
             yet_to_visit_dict[child.position] = child
+    

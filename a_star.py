@@ -99,7 +99,7 @@ def search(maze, start, end, euclidean_dist=True):
     outer_iterations = 0
     max_iterations = (len(maze) // 2) ** 10
 
-    # TODO: Check these, dont know if right. PART 4 what squares do we search . serarch movement is left-right-top-bottom
+    # DONE: Check these, dont know if right. PART 4 what squares do we search . serarch movement is left-right-top-bottom
     # (4 or 8 movements) from every positon
     # move = [[...],  # go up
     #         [...],  # go left

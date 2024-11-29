@@ -31,7 +31,7 @@ class planner:
         # TODO PART 5 Create the cost-map, the laser_sig is 
         # the standard deviation for the gausiian for which
         # the mean is located on the occupant grid. 
-        self.m_utilites=mapManipulator(laser_sig=0.01) # Not sure how we are supposed to determine this value
+        self.m_utilites=mapManipulator(laser_sig=0.6) # Not sure how we are supposed to determine this value
             
         self.costMap=self.m_utilites.make_likelihood_field()
         
@@ -48,7 +48,7 @@ class planner:
         endPose=self.m_utilites.position_2_cell(endPoseCart)
         
         # DONE PART 5 convert the cell pixels into the cartesian coordinates
-        path_cells = search(self.costMap, startPose, endPose, euclidean_dist=True)
+        path_cells = search(self.costMap, startPose, endPose, euclidean_dist=False)
         Path = list(map(self.m_utilites.cell_2_position, path_cells))
 
         # DONE PART 5 return the path as list of [x,y]

@@ -46,7 +46,7 @@ class decision_maker(Node):
         self.reachThreshold=0.1
 
         # DONE PART 5 your localization type
-        self.localizer=localization(type=kalmanFilter, dt=0.1)
+        self.localizer=localization(type=kalmanFilter)
 
 
         
@@ -57,7 +57,7 @@ class decision_maker(Node):
         
         elif motion_type==TRAJECTORY_PLANNER:
             # DONE PART 5 Bonus Put the gains that you conclude from lab 2
-            self.controller=trajectoryController(klp=0.8, klv=0.5, kli=0.5, kap=0.8, kai=0.5, kav=0.5)     
+            self.controller=trajectoryController(klp=0.2, klv=0.2, kli=0.2, kap=0.2, kai=0.2, kav=0.2)     
             self.planner=planner(TRAJECTORY_PLANNER)
         
         else:
